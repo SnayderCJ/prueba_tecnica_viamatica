@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .services.checkout_agent import run_checkout_agent
+from django.shortcuts import render
 
 # Importa tus modelos y serializadores
 # (Asegúrate de crear estos archivos y modelos primero)
@@ -131,3 +132,11 @@ class CheckoutView(APIView):
             "success": result_state.get('message'),
             "invoice_id": result_state.get('invoice_id')
         }, status=status.HTTP_200_OK)
+        
+def product_list_view(request):
+
+    products = Product.objects.all()
+    context = {
+        'products': products
+    }
+    return render(request, 'core/product_list.html', context)

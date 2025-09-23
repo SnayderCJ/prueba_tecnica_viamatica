@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <title>{% block title %} Mi Tienda {% endblock %}</title>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="{% url 'product-list' %}" class="font-bold text-2xl text-blue-600">Viamatica Store</a>
+            <div>
+                <a href="{% url 'product-list' %}" class="mx-2 text-gray-600 hover:text-blue-500">Productos</a>
+                <a href="#" class="mx-2 text-gray-600 hover:text-blue-500">Carrito</a>
+                <a href="#" class="mx-2 text-gray-600 hover:text-blue-500">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+</html>

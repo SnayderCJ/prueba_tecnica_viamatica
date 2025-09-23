@@ -23,9 +23,11 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('core.urls')),
+    
     # El cliente enviará un POST con 'username' y 'password' a esta ruta para obtener sus tokens.
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     # Ruta para refrescar un token de acceso que ha expirado.
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/', include('core.urls'))
+    
 ]

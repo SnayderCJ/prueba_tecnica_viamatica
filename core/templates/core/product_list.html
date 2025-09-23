@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-g">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .product { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>Nuestros Productos</h1>
+
+    {% for product in products %}
+        <div class="product">
+            <h2>{{ product.name }}</h2>
+            <p>{{ product.description }}</p>
+            <p><strong>Precio:</strong> ${{ product.price }}</p>
+            <p><em>Categoría: {{ product.category.name }}</em></p>
+            
+            <form action="" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <button type="submit">Añadir al Carrito</button>
+            </form>
+        </div>
+    {% empty %}
+        <p>No hay productos disponibles.</p>
+    {% endfor %}
+
+</body>
+</html>
