@@ -6,6 +6,7 @@ from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .services.checkout_agent import run_checkout_agent
 
 # Importa tus modelos y serializadores
 # (Asegúrate de crear estos archivos y modelos primero)
@@ -112,31 +113,21 @@ class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        cart = get_object_or_404(Cart, user=request.user, ordered=False)
+        try:
+            cart = Cart.objects.get(user=request.user, ordered=False)
+        except Cart.DoesNotExist:
+             return Response({"error": "No tienes un carrito activo."}, status=status.HTTP_404_NOT_FOUND)
         
-        if not cart.items.exists():
-            return Response({"error": "Tu carrito está vacío."}, status=status.HTTP_400_BAD_REQUEST)
+        #           LLAMADA AL AGENTE DE LANGGRAPH
+        result_state = run_checkout_agent(user_id=request.user.id, cart_id=cart.id)
         
-        # ==========================================================
-        # AQUÍ VA LA LÓGICA PARA LLAMAR A TU AGENTE DE LANGGRAPH
-        # ==========================================================
-        # 1. Recopila la información necesaria (usuario, items del carrito).
-        # 2. Inicia tu grafo de LangGraph con esa información.
-        #    ej: result = run_checkout_agent(user_id=request.user.id, cart_id=cart.id)
-        # 3. El agente debería encargarse de crear la Factura (Invoice),
-        #    vaciar el carrito, etc.
-        # 4. Devuelve el resultado del agente.
+        # Verificamos si el agente reportó un error
+        if result_state.get('error'):
+            # Si hay error, devolvemos un error 400 (Bad Request)
+            return Response({"error": result_state.get('message')}, status=status.HTTP_400_BAD_REQUEST)
         
-        # --- Simulación del proceso por ahora ---
-        # Marcar el carrito como "ordenado" para que no se pueda volver a usar.
-        cart.ordered = True
-        cart.save()
-
-        # Crear una nueva factura (esto lo haría el agente de LangGraph)
-        invoice = Invoice.objects.create(user=request.user, total_amount=cart.get_total()) # (Necesitarás un método get_total en tu modelo Cart)
-        
+        # Si todo fue bien, devolvemos una respuesta exitosa
         return Response({
-            "success": "Tu compra fue procesada exitosamente.",
-            "invoice_id": invoice.id,
-            "total": invoice.total_amount
+            "success": result_state.get('message'),
+            "invoice_id": result_state.get('invoice_id')
         }, status=status.HTTP_200_OK)

@@ -53,4 +53,11 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     """Serializer principal para el Carrito."""
-    # Anidamos el serializer de CartItem para mostrar
+    items = CartItemSerializer(many=True, read_only=True)
+    # Mostramos el total calculado desde el modelo
+    total = serializers.DecimalField(source='get_total', max_digits=10, decimal_places=2, read_only=True)
+
+    # --- ESTA ES LA PARTE QUE FALTA O ESTÁ INCORRECTA ---
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'ordered', 'created_at', 'items', 'total']
