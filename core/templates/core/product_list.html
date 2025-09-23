@@ -1,35 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-g">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Productos</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        .product { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; }
-        button { cursor: pointer; }
-    </style>
-</head>
-<body>
+{% extends 'core/base.html' %}
 
-    <h1>Nuestros Productos</h1>
+{% block title %}Productos - Mi Tienda{% endblock %}
 
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Nuestros Productos</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     {% for product in products %}
-        <div class="product">
-            <h2>{{ product.name }}</h2>
-            <p>{{ product.description }}</p>
-            <p><strong>Precio:</strong> ${{ product.price }}</p>
-            <p><em>Categoría: {{ product.category.name }}</em></p>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-gray-900">{{ product.name }}</h2>
+            <p class="text-gray-600 mt-2">{{ product.description }}</p>
+            <div class="flex justify-between items-center mt-4">
+                <span class="text-2xl font-bold text-blue-600">${{ product.price }}</span>
+                <span class="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">{{ product.category.name }}</span>
+            </div>
             
-            <form action="" method="POST">
+            <form action="{% url 'product-list' %}" method="POST" class="mt-6">
                 {% csrf_token %}
                 <input type="hidden" name="product_id" value="{{ product.id }}">
-                <button type="submit">Añadir al Carrito</button>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Añadir al Carrito
+                </button>
             </form>
         </div>
+    </div>
     {% empty %}
-        <p>No hay productos disponibles.</p>
+    <p class="col-span-3 text-center text-gray-500">No hay productos disponibles.</p>
     {% endfor %}
-
-</body>
-</html>
+</div>
+{% endblock %}

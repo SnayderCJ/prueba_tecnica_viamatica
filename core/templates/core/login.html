@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+            Entrar
+        </button>
+    </form>
+</div>
+{% endblock %}

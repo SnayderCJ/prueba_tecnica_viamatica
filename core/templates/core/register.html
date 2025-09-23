@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Registro{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Crear una Cuenta</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">
+                {{ field.label }}
+            </label>
+            {{ field }} {% if field.help_text %}
+                <p class="text-xs text-gray-500 mt-1">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+            Registrarse
+        </button>
+    </form>
+</div>
+{% endblock %}

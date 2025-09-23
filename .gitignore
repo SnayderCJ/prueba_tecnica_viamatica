@@ -1,1 +1,14 @@
 .venv
+*.nodemodules
+__pycache__/
+*.pyc
+db.sqlite3
+/media
+/staticfiles
+.DS_Store
+.vscode
+.env
+.env.local
+.env.*.local
+.idea
+*.log
