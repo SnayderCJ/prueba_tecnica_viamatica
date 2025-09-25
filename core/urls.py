@@ -33,6 +33,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('carrito/', views.cart_view, name='cart'),
+    path('compra-exitosa/<int:invoice_id>/', views.order_confirmation_view, name='order-confirmation'),
     
     
     path('api/', include(api_urlpatterns)),

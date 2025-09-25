@@ -1,149 +1,126 @@
 import os
-import django
-from ..models import Cart, Invoice, User, CartItem
-from typing import TypedDict, Annotated
+from dotenv import load_dotenv
+from typing import TypedDict, Annotated, Sequence
+import operator
 from langgraph.graph import StateGraph, END
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'viamatica_project.settings')
-django.setup()
+# Importar modelos de Django
+from core.models import Cart, Invoice, User
 
+# Cargar variables de entorno
+load_dotenv()
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+
+# --- Definición del Estado del Grafo ---
 class AgentState(TypedDict):
     user_id: int
     cart_id: int
-    invoice_id: int | None # Puede que al inicio no exista
-    message: str           # Mensaje final para el usuario
-    error: bool            # Para saber si ocurrió un error
+    cart_total: float
+    payment_successful: bool
+    invoice_id: int | None # Puede ser un entero o None al inicio
+    error: bool
+    message: str
 
-# --- 2. Definición de los Nodos (Funciones) ---
-# Cada nodo es un paso en nuestro proceso de checkout.
+# --- Nodos del Grafo ---
 
-def validate_cart(state: AgentState):
-    """
-    Nodo 1: Valida que el carrito exista, pertenezca al usuario y no esté vacío.
-    """
-    print("--- NODO: Validando Carrito ---")
-    cart_id = state['cart_id']
-    user_id = state['user_id']
-    error_message = ""
-    
+def get_cart_details(state: AgentState) -> AgentState:
+    print("--- 💵 Obteniendo detalles del carrito ---")
     try:
-        cart = Cart.objects.get(id=cart_id, user_id=user_id)
-        if cart.ordered:
-            error_message = "Este carrito ya fue procesado."
-        elif not cart.items.exists():
-            error_message = "El carrito está vacío."
+        cart = Cart.objects.get(id=state['cart_id'], user_id=state['user_id'], ordered=False)
+        if not cart.items.exists():
+            state['error'] = True
+            state['message'] = "El carrito está vacío. No se puede procesar el pago."
+            return state
+        
+        state['cart_total'] = float(cart.get_total())
+        state['error'] = False
+        state['message'] = "Detalles del carrito obtenidos."
+        return state
     except Cart.DoesNotExist:
-        error_message = "El carrito no fue encontrado."
+        state['error'] = True
+        state['message'] = "No se encontró un carrito activo para este usuario."
+        return state
 
-    if error_message:
-        print(f"Error de validación: {error_message}")
-        return {"error": True, "message": error_message}
-    
-    print("Validación exitosa.")
-    return {"error": False}
-
-def create_invoice(state: AgentState):
-    """
-    Nodo 2: Crea la factura en la base de datos.
-    """
-    print("--- NODO: Creando Factura ---")
-    cart = Cart.objects.get(id=state['cart_id'])
-    
-    # Creamos la factura con los datos del carrito
-    invoice = Invoice.objects.create(
-        user_id=state['user_id'],
-        total_amount=cart.get_total()
-    )
-    
-    # Aquí podrías agregar lógica para guardar los InvoiceItems si los tuvieras.
-    
-    print(f"Factura #{invoice.id} creada.")
-    return {"invoice_id": invoice.id}
-
-def update_cart_status(state: AgentState):
-    """
-    Nodo 3: Marca el carrito como "procesado" para que no se pueda volver a usar.
-    """
-    print("--- NODO: Actualizando Estado del Carrito ---")
-    cart = Cart.objects.get(id=state['cart_id'])
-    cart.ordered = True
-    cart.save()
-    print(f"Carrito #{cart.id} marcado como 'ordenado'.")
-    return {} # No es necesario actualizar el estado aquí
-
-def generate_final_response(state: AgentState):
-    """
-    Nodo 4: Genera el mensaje final que se devolverá al usuario.
-    """
-    print("--- NODO: Generando Respuesta Final ---")
-    if state['error']:
-        # Si hubo un error en la validación, el mensaje ya está en el estado.
-        return {"message": state['message']}
-
-    message = f"Compra completada con éxito. Factura #{state['invoice_id']} generada."
-    return {"message": message}
-
-# --- 3. Definición de las Conexiones (Edges) ---
-
-def decide_next_step(state: AgentState):
-    """
-    Esta función decide a qué nodo ir después de la validación.
-    Si hay un error, va directo al final. Si no, continúa el proceso.
-    """
-    print("--- DECISIÓN: ¿Hubo un error en la validación? ---")
-    if state['error']:
-        print("Resultado: SÍ. Yendo a generar respuesta de error.")
-        return "end_process" # Nombre de la ruta hacia el final
+def process_payment(state: AgentState) -> AgentState:
+    print(f"--- 💳 Procesando pago por ${state['cart_total']} ---")
+    # Simulación de un proceso de pago. En un caso real, aquí iría la
+    # integración con una pasarela de pagos como Stripe o PayPal.
+    if state['cart_total'] > 0:
+        state['payment_successful'] = True
+        state['message'] = "Pago procesado exitosamente."
     else:
-        print("Resultado: NO. Continuando para crear factura.")
-        return "continue_process" # Nombre de la ruta para continuar
+        state['payment_successful'] = False
+        state['error'] = True
+        state['message'] = "El total del carrito es cero, no se puede procesar el pago."
+    return state
 
-# --- 4. Construcción del Grafo ---
+def create_invoice(state: AgentState) -> AgentState:
+    print("--- 🧾 Creando factura ---")
+    try:
+        user = User.objects.get(id=state['user_id'])
+        cart = Cart.objects.get(id=state['cart_id'])
+        
+        # Crear la factura en la base de datos
+        invoice = Invoice.objects.create(
+            user=user,
+            total_amount=state['cart_total']
+        )
+        
+        # Marcar el carrito como "comprado"
+        cart.ordered = True
+        cart.save()
+        
+        # --- ESTA ES LA LÍNEA CLAVE QUE FALTABA ---
+        state['invoice_id'] = invoice.id 
+        
+        state['message'] = f"Factura #{invoice.id} creada y carrito cerrado."
+        return state
+    except Exception as e:
+        state['error'] = True
+        state['message'] = f"Error al crear la factura: {e}"
+        return state
 
-# Creamos una instancia del grafo y le decimos cuál es nuestro objeto de estado.
-workflow = StateGraph(AgentState)
+def handle_error(state: AgentState) -> AgentState:
+    print(f"--- ❌ Error manejado: {state['message']} ---")
+    return state
 
-# Añadimos los nodos
-workflow.add_node("validate_cart", validate_cart)
-workflow.add_node("create_invoice", create_invoice)
-workflow.add_node("update_cart_status", update_cart_status)
-workflow.add_node("generate_response", generate_final_response)
+# --- Lógica Condicional del Grafo ---
 
-# Definimos el flujo
-workflow.set_entry_point("validate_cart")
+def decide_next_step(state: AgentState) -> str:
+    if state.get('error'):
+        return "handle_error"
+    if not state.get('payment_successful'):
+        return "process_payment"
+    return "create_invoice"
 
-# Creamos la conexión condicional (la bifurcación)
-workflow.add_conditional_edges(
-    "validate_cart",
-    decide_next_step,
-    {
-        "continue_process": "create_invoice",
-        "end_process": "generate_response"
-    }
-)
+# --- Construcción y Ejecución del Grafo ---
 
-# Conectamos el resto de los pasos en secuencia
-workflow.add_edge('create_invoice', 'update_cart_status')
-workflow.add_edge('update_cart_status', 'generate_response')
-workflow.add_edge('generate_response', END) # El final del flujo
+def run_checkout_agent(user_id: int, cart_id: int) -> dict:
+    workflow = StateGraph(AgentState)
 
-# Compilamos el grafo para poder usarlo
-app = workflow.compile()
+    workflow.add_node("get_cart_details", get_cart_details)
+    workflow.add_node("process_payment", process_payment)
+    workflow.add_node("create_invoice", create_invoice)
+    workflow.add_node("handle_error", handle_error)
 
-# --- 5. Función Principal para Llamar desde Django ---
+    workflow.set_entry_point("get_cart_details")
 
-def run_checkout_agent(user_id: int, cart_id: int):
-    """
-    Esta es la función que importarás y llamarás desde tu `views.py`.
-    """
+    workflow.add_conditional_edges(
+        "get_cart_details",
+        lambda state: "handle_error" if state.get("error") else "process_payment"
+    )
+    workflow.add_conditional_edges(
+        "process_payment",
+        lambda state: "handle_error" if state.get("error") else "create_invoice"
+    )
+
+    workflow.add_edge('create_invoice', END)
+    workflow.add_edge('handle_error', END)
+
+    app = workflow.compile()
+
     inputs = {"user_id": user_id, "cart_id": cart_id}
-    # .stream() ejecuta el grafo y devuelve los resultados de cada paso.
-    # El último resultado es el estado final.
-    final_state = None
-    for s in app.stream(inputs):
-        final_state = s
-    
-    # Devolvemos el último estado que contiene el mensaje final
-    # Accedemos a la clave del primer (y único) nodo en el estado final
-    key, value = list(final_state.items())[0]
-    return value
+    final_state = app.invoke(inputs)
+
+    return final_state

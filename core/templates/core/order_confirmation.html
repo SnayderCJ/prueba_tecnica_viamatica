@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Compra Exitosa{% endblock %}
+
+{% block content %}
+<div class="container mx-auto text-center py-12">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+            <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-extrabold text-slate-900">¡Gracias por tu compra!</h1>
+        <p class="mt-2 text-slate-500">Hemos recibido tu pedido. Aquí tienes los detalles de tu factura:</p>
+
+        <div class="text-left bg-slate-50 border rounded-lg p-6 mt-8 space-y-4">
+            <div class="flex justify-between">
+                <span class="font-semibold text-slate-600">Número de Factura:</span>
+                <span class="font-mono text-slate-800">#{{ invoice.id }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="font-semibold text-slate-600">Fecha del Pedido:</span>
+                <span class="text-slate-800">{{ invoice.created_at|date:"d M Y, h:i a" }}</span>
+            </div>
+            <div class="border-t my-4"></div>
+            <div class="flex justify-between text-xl font-bold">
+                <span class="text-slate-900">Monto Total:</span>
+                <span class="text-indigo-600">${{ invoice.total_amount }}</span>
+            </div>
+        </div>
+
+        <div class="mt-10">
+            <a href="{% url 'product-list-page' %}" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
+                Seguir Comprando
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

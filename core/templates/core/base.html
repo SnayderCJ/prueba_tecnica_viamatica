@@ -86,10 +86,29 @@
         </div>
     </nav>
 
-    <main class="flex-grow">
-        {% block content %}{% endblock %}
-    </main>
+
     
+    <main class="flex-grow">
+
+        <main class="flex-grow container mx-auto px-6 py-8">
+    
+    {% if messages %}
+        <div class="space-y-3 mb-6">
+        {% for message in messages %}
+            {% if 'added_to_cart_modal' not in message.tags %}
+                <div class="flex items-start p-4 rounded-lg border text-sm
+                    {% if message.tags == 'success' %} bg-green-50 border-green-300 text-green-800 {% endif %}
+                    {% if message.tags == 'error' %} bg-red-50 border-red-300 text-red-800 {% endif %}
+                    {% if message.tags == 'info' %} bg-blue-50 border-blue-300 text-blue-800 {% endif %}">
+                    <span>{{ message }}</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

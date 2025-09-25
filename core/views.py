@@ -1,5 +1,3 @@
-# core/views.py
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from rest_framework import viewsets, generics, status
@@ -110,7 +108,7 @@ def product_list_view(request):
         else:
             cart_item.quantity = 1
         cart_item.save()
-        messages.success(request, f"¡'{product.name}' se añadió a tu carrito!")
+        messages.success(request, f"¡'{product.name}' se añadió a tu carrito!", extra_tags='added_to_cart_modal')
         return redirect('product-list-page') 
 
     products = Product.objects.all()
@@ -158,21 +156,56 @@ def logout_view(request):
 def cart_view(request):
     cart, created = Cart.objects.get_or_create(user=request.user, ordered=False)
     if request.method == 'POST':
-        if 'remove_item' in request.POST:
-            item_id = request.POST.get('item_id')
+        item_id = request.POST.get('item_id')
+        if item_id:
             cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
-            cart_item.delete()
-            messages.success(request, "Item eliminado del carrito.")
+            if 'increment_quantity' in request.POST:
+                cart_item.quantity += 1
+                cart_item.save()
+                messages.success(request, f"Se actualizó la cantidad de '{cart_item.product.name}'.")
+            elif 'decrement_quantity' in request.POST:
+                if cart_item.quantity > 1:
+                    cart_item.quantity -= 1
+                    cart_item.save()
+                    messages.success(request, f"Se actualizó la cantidad de '{cart_item.product.name}'.")
+                else:
+                    product_name = cart_item.product.name
+                    cart_item.delete()
+                    messages.success(request, f"Se eliminó '{product_name}' del carrito.")
+            elif 'remove_item' in request.POST:
+                product_name = cart_item.product.name
+                cart_item.delete()
+                messages.success(request, f"Se eliminó '{product_name}' del carrito.")
+        
         elif 'checkout' in request.POST:
             if not cart.items.exists():
                 messages.error(request, "Tu carrito está vacío.")
                 return redirect('cart')
+            
             result_state = run_checkout_agent(user_id=request.user.id, cart_id=cart.id)
+            
             if result_state.get('error'):
                 messages.error(request, f"Error en el pago: {result_state.get('message')}")
+                return redirect('cart') # Si hay error, nos quedamos en el carrito
             else:
-                messages.success(request, f"¡Compra exitosa! {result_state.get('message')}")
-            return redirect('product-list-page')
+                # CORRECCIÓN: Redirigir a la página de confirmación con el ID de la factura.
+                invoice_id = result_state.get('invoice_id')
+                # No necesitamos un mensaje aquí, la página de confirmación es el mensaje.
+                return redirect('order-confirmation', invoice_id=invoice_id)
+
         return redirect('cart')
+
     context = {'cart': cart}
     return render(request, 'core/cart.html', context)
+
+# --- VISTA NUEVA: Para la página de confirmación de compra ---
+@login_required
+def order_confirmation_view(request, invoice_id):
+    """
+    Muestra la página de confirmación después de una compra exitosa.
+    """
+    invoice = get_object_or_404(Invoice, id=invoice_id, user=request.user)
+    context = {
+        'invoice': invoice
+    }
+    return render(request, 'core/order_confirmation.html', context)
