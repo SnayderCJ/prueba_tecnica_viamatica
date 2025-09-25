@@ -20,11 +20,24 @@
 
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="{% url 'product-list-page' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Productos</a>
+                        <a href="{% url 'product-list-page' %}" 
+                           class="px-3 py-2 rounded-md text-sm font-medium transition-colors 
+                                  {% if request.resolver_match.url_name == 'product-list-page' %}
+                                      bg-indigo-600 text-white
+                                  {% else %}
+                                      text-gray-600 hover:bg-indigo-500 hover:text-white
+                                  {% endif %}">Productos</a>
+                        
                         {% if user.is_authenticated %}
-                            <a href="{% url 'cart' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Carrito</a>
+                            <a href="{% url 'cart' %}" 
+                               class="px-3 py-2 rounded-md text-sm font-medium transition-colors
+                                      {% if request.resolver_match.url_name == 'cart' or request.resolver_match.url_name == 'order-confirmation' %}
+                                          bg-indigo-600 text-white
+                                      {% else %}
+                                          text-gray-600 hover:bg-indigo-500 hover:text-white
+                                      {% endif %}">Carrito</a>
                         {% endif %}
-                    </div>
+                        </div>
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-4">
@@ -40,7 +53,7 @@
                                 <button type="submit" class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors">Logout</button>
                             </form>
                         </div>
-                        {% else %}
+                    {% else %}
                         <a href="{% url 'login' %}" class="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</a>
                         <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors">Registro</a>
                     {% endif %}
@@ -48,16 +61,19 @@
 
                 <div class="-mr-2 flex md:hidden">
                     <button @click="open = !open" type="button" class="bg-indigo-500 inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-500 focus:ring-white">
-                        </button>
+                        <span class="sr-only">Abrir menú principal</span>
+                        <svg :class="{'hidden': open, 'block': !open }" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg :class="{'block': open, 'hidden': !open }" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
             </div>
         </div>
 
         <div x-show="open" @click.away="open = false" class="md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="{% url 'product-list-page' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Productos</a>
+                <a href="{% url 'product-list-page' %}" class="block px-3 py-2 rounded-md text-base font-medium {% if request.resolver_match.url_name == 'product-list-page' %}bg-indigo-600 text-white{% else %}text-gray-600 hover:bg-indigo-500 hover:text-white{% endif %}">Productos</a>
                  {% if user.is_authenticated %}
-                    <a href="{% url 'cart' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Carrito</a>
+                    <a href="{% url 'cart' %}" class="block px-3 py-2 rounded-md text-base font-medium {% if request.resolver_match.url_name == 'cart' or request.resolver_match.url_name == 'order-confirmation' %}bg-indigo-600 text-white{% else %}text-gray-600 hover:bg-indigo-500 hover:text-white{% endif %}">Carrito</a>
                 {% endif %}
             </div>
             <div class="pt-4 pb-3 border-t border-gray-200">
@@ -76,7 +92,7 @@
                             <button type="submit" class="w-full text-left text-gray-600 hover:bg-red-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</button>
                         </form>
                     </div>
-                    {% else %}
+                {% else %}
                     <div class="px-2 space-y-1">
                         <a href="{% url 'login' %}" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Login</a>
                         <a href="{% url 'register' %}" class="bg-indigo-600 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-700">Registro</a>
@@ -86,28 +102,24 @@
         </div>
     </nav>
 
-
-    
-    <main class="flex-grow">
-
-        <main class="flex-grow container mx-auto px-6 py-8">
-    
-    {% if messages %}
-        <div class="space-y-3 mb-6">
-        {% for message in messages %}
-            {% if 'added_to_cart_modal' not in message.tags %}
-                <div class="flex items-start p-4 rounded-lg border text-sm
-                    {% if message.tags == 'success' %} bg-green-50 border-green-300 text-green-800 {% endif %}
-                    {% if message.tags == 'error' %} bg-red-50 border-red-300 text-red-800 {% endif %}
-                    {% if message.tags == 'info' %} bg-blue-50 border-blue-300 text-blue-800 {% endif %}">
-                    <span>{{ message }}</span>
-                </div>
-            {% endif %}
-        {% endfor %}
-        </div>
-    {% endif %}
-    {% block content %}{% endblock %}
-</main>
+    <main class="flex-grow container mx-auto px-6 py-8">
+        {% if messages %}
+            <div class="space-y-3 mb-6">
+            {% for message in messages %}
+                {% if 'added_to_cart_modal' not in message.tags %}
+                    <div class="flex items-start p-4 rounded-lg border text-sm
+                        {% if message.tags == 'success' %} bg-green-50 border-green-300 text-green-800 {% endif %}
+                        {% if message.tags == 'error' %} bg-red-50 border-red-300 text-red-800 {% endif %}
+                        {% if message.tags == 'info' %} bg-blue-50 border-blue-300 text-blue-800 {% endif %}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
