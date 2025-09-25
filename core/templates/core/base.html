@@ -1,43 +1,95 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
-    <title>{% block title %} Mi Tienda {% endblock %}</title>
+    <title>{% block title %}Viamatica Store{% endblock %}</title>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="h-full flex flex-col">
 
-    <nav class="bg-white shadow-md">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <a href="{% url 'product-list' %}" class="font-bold text-2xl text-blue-600">Viamatica Store</a>
-            <div class="flex items-center">
-                <a href="{% url 'product-list' %}" class="mx-2 text-gray-600 hover:text-blue-500">Productos</a>
-                
-                {% if user.is_authenticated %}
-                    <a href="{% url 'cart' %}" class="mx-2 text-gray-600 hover:text-blue-500">Carrito</a>
-                    <span class="mx-4 text-gray-700">Hola, {{ user.username }}</span>
-                    <form action="{% url 'logout' %}" method="post" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="bg-red-500 text-white font-bold py-1 px-3 rounded-lg hover:bg-red-600 text-sm">
-                            Logout
-                        </button>
-                    </form>
-                    {% else %}
-                    <a href="{% url 'login' %}" class="mx-2 text-gray-600 hover:text-blue-500">Login</a>
-                    <a href="{% url 'register' %}" class="mx-2 bg-blue-600 text-white font-bold py-1 px-3 rounded-lg hover:bg-blue-700 text-sm">
-                        Registro
+    <nav x-data="{ open: false }" class="bg-white shadow-lg sticky top-0 z-20">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="{% url 'product-list-page' %}" class="text-2xl font-bold text-indigo-600 hover:text-indigo-700">
+                        Viamatica Store
                     </a>
+                </div>
+
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="{% url 'product-list-page' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Productos</a>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'cart' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Carrito</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <span class="text-sm font-bold text-indigo-600">{{ user.username|first|upper }}</span>
+                            </div>
+                            <span class="text-slate-700 text-sm font-medium">{{ user.username }}</span>
+                            <span class="text-slate-300">|</span>
+                            <form action="{% url 'logout' %}" method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors">Logout</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</a>
+                        <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors">Registro</a>
                     {% endif %}
+                </div>
+
+                <div class="-mr-2 flex md:hidden">
+                    <button @click="open = !open" type="button" class="bg-indigo-500 inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-500 focus:ring-white">
+                        </button>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="open" @click.away="open = false" class="md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="{% url 'product-list-page' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Productos</a>
+                 {% if user.is_authenticated %}
+                    <a href="{% url 'cart' %}" class="text-gray-600 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Carrito</a>
+                {% endif %}
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200">
+                {% if user.is_authenticated %}
+                    <div class="flex items-center px-5">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-base font-bold text-indigo-600">{{ user.username|first|upper }}</span>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-slate-800">{{ user.username }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 px-2 space-y-1">
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left text-gray-600 hover:bg-red-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="px-2 space-y-1">
+                        <a href="{% url 'login' %}" class="text-gray-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base font-medium">Login</a>
+                        <a href="{% url 'register' %}" class="bg-indigo-600 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-700">Registro</a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="container mx-auto px-6 py-8">
-        {% block content %}
-        {% endblock %}
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
     </main>
-
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

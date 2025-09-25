@@ -1,10 +1,10 @@
-# core/urls.py
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
 from django.views.generic import RedirectView
+
+
 
 # --- RUTAS DE LA API ---
 router = DefaultRouter()
@@ -28,7 +28,7 @@ api_urlpatterns = [
 # --- RUTAS PRINCIPALES DE LA APP ---
 urlpatterns = [
     path('', RedirectView.as_view(url='/productos/', permanent=True), name='home'),
-    path('productos/', views.product_list_view, name='product-list'),
+    path('productos/', views.product_list_view, name='product-list-page'), 
     path('registro/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

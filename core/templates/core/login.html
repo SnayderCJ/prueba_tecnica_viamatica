@@ -1,26 +1,72 @@
 {% extends 'core/base.html' %}
+{% load widget_tweaks %}
 
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h1>
-    <form method="post">
-        {% csrf_token %}
-        
-        {% for field in form %}
-        <div class="mb-4">
-            <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">{{ field.label }}</label>
-            {{ field }}
-            {% for error in field.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
-            {% endfor %}
-        </div>
-        {% endfor %}
+<div class="min-h-[70vh] flex items-center justify-center py-12 px-4">
 
-        <button type="submit" class="w-full mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
-            Entrar
-        </button>
-    </form>
+    <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Bienvenido de Nuevo</h1>
+            <p class="text-slate-500">Inicia sesión para continuar con tu compra.</p>
+        </div>
+
+        {% if messages %}
+            <div class.py="space-y-3 mb-6">
+            {% for message in messages %}
+                <div class="flex items-start p-4 rounded-lg border text-sm
+                    {% if message.tags == 'error' %} bg-red-50 border-red-300 text-red-800 {% endif %}
+                    {% if message.tags == 'info' %} bg-blue-50 border-blue-300 text-blue-800 {% endif %}">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-slate-700 text-sm font-bold mb-2">
+                    {{ field.label }}
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        {% if field.name == 'username' %}
+                            <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+                        {% else %}
+                            <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+                        {% endif %}
+                    </span>
+                    
+                    {% if field.errors %}
+                        {% render_field field class="w-full pl-10 pr-3 py-2 border border-red-400 rounded-lg focus:outline-none focus:ring focus:ring-red-200" %}
+                    {% else %}
+                        {% render_field field class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-indigo-200" %}
+                    {% endif %}
+                </div>
+                {% for error in field.errors %}
+                    <div class="flex items-center text-red-600 text-xs mt-2 font-semibold">
+                        <span>{{ error }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full mt-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
+                Entrar
+            </button>
+        </form>
+
+        <div class="text-center mt-6">
+            <p class="text-sm text-slate-600">
+                ¿No tienes una cuenta? <a href="{% url 'register' %}" class="font-bold text-indigo-600 hover:underline">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}
