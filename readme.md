@@ -41,7 +41,7 @@ Sigue estos pasos para levantar el proyecto en un entorno local.
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://github.com/SnayderCJ/prueba_tecnica_viamatica.git](https://github.com/SnayderCJ/prueba_tecnica_viamatica.git)
+    git clone https://github.com/SnayderCJ/prueba_tecnica_viamatica.git
     cd prueba_tecnica_viamatica
     ```
 
