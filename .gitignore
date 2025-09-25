@@ -7,8 +7,5 @@ db.sqlite3
 /staticfiles
 .DS_Store
 .vscode
-.env
-.env.local
-.env.*.local
 .idea
 *.log
